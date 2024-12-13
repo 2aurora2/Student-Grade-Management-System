@@ -8,3 +8,5 @@ router.get('/get/info', async (req, res, next) => {
         name: '数据库系统实现'
     });
 });
+
+module.exports = router;
