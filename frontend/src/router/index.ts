@@ -5,7 +5,20 @@ const routes = [
     {
         path: '/',
         name: 'Home',
-        component: HomeView
+        component: HomeView,
+        redirect: '/course',
+        children:[
+            {
+                path: 'course',
+                name: 'Course',
+                component: () => import('@/views/CourseView.vue')
+            },
+            {
+                path: 'class',
+                name: 'Class',
+                component: () => import('@/views/ClassView.vue')
+            }
+        ]
     },
     {
         path: '/:pathMatch(.*)*',

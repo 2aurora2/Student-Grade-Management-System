@@ -22,13 +22,6 @@ export default defineConfig({
       "@": resolve(__dirname, 'src')
     }
   },
-  css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '@import "@/assets/style/global.scss";'
-        }
-      }
-  },
   plugins: [
     vue(),
     AutoImport({
