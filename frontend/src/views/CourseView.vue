@@ -21,10 +21,10 @@
                 <el-empty description="暂无课程" :image-size="150"/>
             </template>
             <el-table-column type="index" width="50"/>
-            <el-table-column prop="name" label="课程名称"/>
-            <el-table-column prop="credit" label="课程学分"/>
-            <el-table-column prop="daily_ratio" label="平时分占比"/>
-            <el-table-column prop="class_cnt" label="班级数"/>
+            <el-table-column prop="NAME" label="课程名称"/>
+            <el-table-column prop="CREDIT" label="课程学分"/>
+            <el-table-column prop="DAILY_RATIO" label="平时分占比"/>
+            <el-table-column prop="COUNT" label="班级数"/>
             <el-table-column label="操作">
                 <template #default="scope">
                     <el-button
@@ -76,7 +76,7 @@ import {onMounted, reactive, ref} from 'vue';
 import CONST from '../const'
 import api from "../api";
 import {SuccessNotice, ErrorNotice} from '../utils/NotificationUtils.ts';
-import {ICourseRow} from "../interface/course.ts";
+import {ICourse} from "../interface/course.ts";
 
 const addDialogVisible = ref(false);
 const courseForm = reactive({
@@ -87,10 +87,23 @@ const courseForm = reactive({
 
 const searchKey = ref('');
 const loading = ref(false);
-const courseData = ref<ICourseRow[]>([]);
+const courseData = ref<ICourse[]>([]);
 const getCourseList = async () => {
     loading.value = true;
-    // TODO: 利用searchKey查询
+    try {
+        let {data: res} = await api.courseApi.getCourse({
+            name: searchKey.value === "" ? null : searchKey.value
+        });
+        if (res.code === 200) {
+            courseData.value = res.data.courseList;
+        } else {
+            ErrorNotice('获取课程列表失败！');
+        }
+    } catch (e: any) {
+        ErrorNotice('获取课程列表失败，' + e);
+    } finally {
+        loading.value = false;
+    }
 }
 
 const addNewCourse = async () => {
@@ -112,7 +125,7 @@ const addNewCourse = async () => {
 }
 // @ts-ignore
 const delCourse = async (index: number, row: ICourseRow) => {
-    let delCourseId = courseData.value[index].id;
+    let delCourseId = courseData.value[index].ID;
     try {
         let {data: res} = await api.courseApi.delCourse({course_id: delCourseId});
         if (res.code == 200) {
@@ -123,7 +136,6 @@ const delCourse = async (index: number, row: ICourseRow) => {
         ErrorNotice('删除课程失败，' + e);
     }
 }
-
 
 onMounted(async () => {
     await getCourseList();

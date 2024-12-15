@@ -1,3 +1,5 @@
+import {ICourse} from "../../interface/course.ts";
+
 export type TCreateCourseReq = {
     name: string,
     credit: number,
@@ -12,10 +14,10 @@ export type TDelCourseReq = {
     course_id: number
 }
 
-export type TQueryCourseReq = {
-
+export type TGetCourseReq = {
+    name: string | null
 }
 
-export type TQueryCourseRes = {
-
+export type TGetCourseRes = {
+    courseList: ICourse[]
 }

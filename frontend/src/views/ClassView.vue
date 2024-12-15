@@ -29,14 +29,14 @@
                     <el-button
                             size="small"
                             type="primary"
-                            @click=""
+                            @click="getClassDetails(scope.$index, scope.row)"
                     >
                         查看详情
                     </el-button>
                     <el-button
                             size="small"
                             type="danger"
-                            @click=""
+                            @click="delClass(scope.$index, scope.row)"
                     >
                         删除
                     </el-button>
@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import {IClassRow} from "../interface/class.ts";
 import CONST from "../const";
 
@@ -70,8 +70,21 @@ const page = ref(1);
 const total = ref(0);
 const getClassList = async (np: number) => {
     page.value = np;
+    loading.value = true;
     // TODO: 分页获取班级列表
 }
+const getClassDetails = async (index: number, row: any) => {
+    console.log(index, row);
+    // TODO: 获取班级详情
+}
+const delClass = async (index: number, row: any) => {
+
+}
+
+
+onMounted(async () => {
+    await getClassList(1);
+})
 </script>
 
 <style scoped lang="scss">
