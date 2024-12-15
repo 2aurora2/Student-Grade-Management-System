@@ -48,21 +48,37 @@ router.post('/upload', async (req, res, next) => {
     let stu_list = req.body.stu_list;
     let class_id = req.body.class_id;
     var connection = await oracledb.getConnection();
+
+    let insert_count = 0;
     try {
         // 调用 PL/SQL 执行
-        const result = await connection.execute(
-            `BEGIN :insert_count := insert_students(:stu_list, :class_id); END;`,
-            {
-                stu_list: {val: stu_list, dir: oracledb.BIND_IN, type: oracledb.ARRAY, maxArrayLength: stu_list.length},
-                class_id: {val: class_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
-                insert_count: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
+        for (var i = 0; i < stu_list.length; i++) {
+            // 调用 PL/SQL 执行
+            const result = await connection.execute(
+                `BEGIN :id := insert_student(:name, :campus_id, :major, :grade, :class_id); END;`,
+                {
+                    name: {val: stu_list[i].name, dir: oracledb.BIND_IN, type: oracledb.STRING},
+                    campus_id: {val: stu_list[i].campus_id, dir: oracledb.BIND_IN, type: oracledb.STRING},
+                    major: {val: stu_list[i].major, dir: oracledb.BIND_IN, type: oracledb.STRING},
+                    grade: {val: stu_list[i].grade, dir: oracledb.BIND_IN, type: oracledb.STRING},
+                    class_id: {val: class_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                    id: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
+                }
+            );
+            // 检查是否插入成功
+            if (result.outBinds.id !== -1) {
+                console.log("插入学生ID: " + result.outBinds.id);
+                insert_count = insert_count + 1;
+            } else {
+                console.log("插入学生失败");
+                responseUtil.error(res);
             }
-        );
+        }
         // 检查是否插入成功
-        if (result.outBinds.insert_count !== -1) {
-            console.log("插入学生数量 " + result.outBinds.insert_count);
+        if (insert_count !== -1) {
+            console.log("插入学生数量: " + insert_count);
             responseUtil.success(res, {
-                insert_count: result.outBinds.insert_count
+                insert_count: insert_count
             });
         } else {
             console.log("插入学生失败");
