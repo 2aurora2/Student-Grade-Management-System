@@ -4,36 +4,30 @@ var oracledb = require('oracledb');
 
 const responseUtil = require("../utils/response");
 
-router.get('/get/info', async (req, res, next) => {
-    responseUtil.success(res, {
-        name: '数据库系统实现'
-    });
-});
-
 router.post('/create', async (req, res, next) => {
-    let cou_name = req.body.name;
-    let cou_credit = req.body.credit;
-    let cou_daily_ratio = req.body.daily_ratio;
+    let cls_name = req.body.name;
+    let cls_capacity = req.body.capacity;
+    let course_id = req.body.course_id;
     var connection = await oracledb.getConnection();
     try {
         // 调用 PL/SQL 执行
         const result = await connection.execute(
-            `BEGIN :id := insert_course(:name, :credit, :daily_ratio); END;`,
+            `BEGIN :id := insert_class(:name, :capacity, :course_id); END;`,
             {
-                name: {val: cou_name, dir: oracledb.BIND_IN, type: oracledb.STRING},
-                credit: {val: cou_credit, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
-                daily_ratio: {val: cou_daily_ratio, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                name: {val: cls_name, dir: oracledb.BIND_IN, type: oracledb.STRING},
+                capacity: {val: cls_capacity, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                course_id: {val: course_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
                 id: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
             }
         );
         // 检查是否插入成功
         if (result.outBinds.id !== -1) {
-            console.log("插入课程ID: " + result.outBinds.id);
+            console.log("插入班级ID: " + result.outBinds.id);
             responseUtil.success(res, {
                 id: result.outBinds.id
             });
         } else {
-            console.log("插入课程失败");
+            console.log("插入班级失败");
             responseUtil.error(res);
         }
     } catch (e) {
