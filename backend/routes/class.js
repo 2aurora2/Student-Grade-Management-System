@@ -40,4 +40,64 @@ router.post('/create', async (req, res, next) => {
     }
 });
 
+router.post('/delete', async (req, res, next) => {
+    let class_id = req.body.class_id;
+    var connection = await oracledb.getConnection();
+    try {
+        // 调用 PL/SQL 执行
+        const result = await connection.execute(
+            `BEGIN :flag := delete_class_by_id(:course_id); END;`,
+            {
+                course_id: {val: class_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                flag: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
+            }
+        );
+        if (result.outBinds.flag === -1) {
+            console.log("班级不存在");
+        }
+        responseUtil.success(res, {});
+    } catch (e) {
+        console.error(e);
+        responseUtil.error(res);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+});
+
+router.get('/get', async (req, res, next) => {
+    const {name} = req.query;
+    var connection = await oracledb.getConnection();
+    try {
+        // 调用PL/SQL函数
+        const result = await connection.execute(
+            `BEGIN :result := get_class(${name ? `'${name}'` : 'NULL'}); END;`,
+            {
+                result: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
+            }
+        );
+        // 处理游标结果
+        const cursor = result.outBinds.result;
+
+        // 读取游标结果
+        let classList = []
+        let row;
+        while ((row = await cursor.getRow())) {
+            classList.push(row)
+        }
+
+        responseUtil.success(res, {
+            classList: classList
+        });
+    } catch (e) {
+        console.error(e);
+        responseUtil.error(res);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+});
+
 module.exports = router;
