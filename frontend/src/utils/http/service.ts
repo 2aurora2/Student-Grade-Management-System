@@ -1,12 +1,13 @@
 import axiosInstance from "./instance.js";
+import {AxiosResponse} from "axios";
 
-const get = (url: string) => {
-    return axiosInstance.get(url);
-}
+const get = <T = any>(url: string): Promise<AxiosResponse<T>> => {
+    return axiosInstance.get<T>(url);
+};
 
-const post = (url: string, data?: Object) => {
-    return axiosInstance.post(url, data);
-}
+const post = <T = any>(url: string, data?: Object): Promise<AxiosResponse<T>> => {
+    return axiosInstance.post<T>(url, data);
+};
 
 export default {
     get,
