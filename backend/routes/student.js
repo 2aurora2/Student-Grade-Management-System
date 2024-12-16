@@ -94,4 +94,61 @@ router.post('/upload', async (req, res, next) => {
     }
 });
 
+router.post('/delete', async (req, res, next) => {
+    let stu_id = req.body.stu_id;
+    let class_id = req.body.class_id;
+    var connection = await oracledb.getConnection();
+    try {
+        // 调用 PL/SQL 执行
+        const result = await connection.execute(
+            `BEGIN :flag := delete_stu_class_by_id(:stu_id, :class_id); END;`,
+            {
+                stu_id: {val: stu_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                class_id: {val: class_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                flag: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
+            }
+        );
+        if (result.outBinds.flag === -1) {
+            console.log("学生不存在");
+        }
+        responseUtil.success(res, {});
+    } catch (e) {
+        console.error(e);
+        responseUtil.error(res);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+});
+
+router.post('/mark', async (req, res, next) => {
+    let stu_id = req.body.stu_id;
+    let course_id = req.body.course_id;
+    let daily_score = req.body.daily_score;
+    let exam_score = req.body.exam_score;
+    var connection = await oracledb.getConnection();
+    try {
+        // 调用 PL/SQL 执行
+        const result = await connection.execute(
+            `BEGIN :flag := add_or_update_stu_cou_score(:stu_id, :course_id, :daily_score, :exam_score); END;`,
+            {
+                stu_id: {val: stu_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                course_id: {val: course_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                daily_score: {val: daily_score, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                exam_score: {val: exam_score, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                flag: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
+            }
+        );
+        responseUtil.success(res, {});
+    } catch (e) {
+        console.error(e);
+        responseUtil.error(res);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+});
+
 module.exports = router;

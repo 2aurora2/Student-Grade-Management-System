@@ -46,9 +46,9 @@ router.post('/delete', async (req, res, next) => {
     try {
         // 调用 PL/SQL 执行
         const result = await connection.execute(
-            `BEGIN :flag := delete_class_by_id(:course_id); END;`,
+            `BEGIN :flag := delete_class_by_id(:class_id); END;`,
             {
-                course_id: {val: class_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
+                class_id: {val: class_id, dir: oracledb.BIND_IN, type: oracledb.NUMBER},
                 flag: {dir: oracledb.BIND_OUT, type: oracledb.NUMBER}
             }
         );
@@ -84,11 +84,43 @@ router.get('/get', async (req, res, next) => {
         let classList = []
         let row;
         while ((row = await cursor.getRow())) {
-            classList.push(row)
+            classList.push(row);
         }
 
         responseUtil.success(res, {
             classList: classList
+        });
+    } catch (e) {
+        console.error(e);
+        responseUtil.error(res);
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+});
+
+router.get('/get/info', async (req, res, next) => {
+    const {class_id} = req.query;
+    var connection = await oracledb.getConnection();
+    try {
+        // 调用PL/SQL函数
+        const result = await connection.execute(
+            `BEGIN :result := get_class_student_info(${class_id}); END;`,
+            {
+                result: { type: oracledb.CURSOR, dir: oracledb.BIND_OUT }
+            }
+        );
+
+        const cursor = result.outBinds.result;
+        const studentList = [];
+        let row;
+        while ((row = await cursor.getRow())) {
+            studentList.push(row);
+        }
+
+        responseUtil.success(res, {
+            studentList: studentList
         });
     } catch (e) {
         console.error(e);

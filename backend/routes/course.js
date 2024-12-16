@@ -90,7 +90,7 @@ router.get('/get', async (req, res, next) => {
         let courseList = []
         let row;
         while ((row = await cursor.getRow())) {
-            courseList.push(row)
+            courseList.push(row);
         }
 
         responseUtil.success(res, {
