@@ -20,11 +20,11 @@
             <template #empty>
                 <el-empty description="暂无课程" :image-size="150"/>
             </template>
-            <el-table-column type="index" width="50"/>
+            <el-table-column type="index" width="40"/>
             <el-table-column prop="NAME" label="课程名称"/>
             <el-table-column prop="CREDIT" label="课程学分"/>
             <el-table-column prop="DAILY_RATIO" label="平时分占比"/>
-            <el-table-column prop="COUNT" label="班级数"/>
+            <el-table-column prop="COUNT" label="班级数" width="80"/>
             <el-table-column label="操作">
                 <template #default="scope">
                     <el-button
