@@ -20,10 +20,10 @@
             <template #empty>
                 <el-empty description="暂无班级" :image-size="150"/>
             </template>
-            <el-table-column type="index" width="50"/>
-            <el-table-column prop="name" label="班级名称"/>
-            <el-table-column prop="course_name" label="所属课程"/>
-            <el-table-column prop="capacity" label="班级容量"/>
+            <el-table-column type="index" width="30"/>
+            <el-table-column prop="NAME" label="班级名称"/>
+            <el-table-column prop="COURSE_NAME" label="所属课程"/>
+            <el-table-column prop="CAPACITY" label="班级容量"/>
             <el-table-column label="操作">
                 <template #default="scope">
                     <el-button
@@ -98,7 +98,8 @@
         <el-dialog
                 v-model="detailsDialogVisible"
                 title="班级详情"
-                width="1200"
+                width="1400"
+                :destroy-on-close="true"
         >
             <div class="details-dialog">
                 <div class="statistic">
@@ -107,10 +108,16 @@
                             :name="className"
                             :count="classCount"
                             :course="classCourse"
+                            v-model:scoreList="scoreList"
                     />
                 </div>
                 <div class="stu-table">
-                    <class-stu-table-comp/>
+                    <class-stu-table-comp
+                            :class_id="classId"
+                            :course_id="classCourseId"
+                            v-model:stuList="stuList"
+                            @update-stu="getClassStuInfo"
+                    />
                 </div>
             </div>
         </el-dialog>
@@ -127,6 +134,7 @@ import {ICourse} from "../interface/course.ts";
 import {checkEmptyProperty} from "../utils/CommonUtils.ts";
 import ClassStatisticComp from "@/components/ClassStatisticComp.vue";
 import ClassStuTableComp from "@/components/ClassStuTableComp.vue";
+import {IStudent} from "../interface/student.ts";
 
 // 新增班级
 const addDialogVisible = ref(false);
@@ -138,6 +146,7 @@ const classForm = reactive({
 const options = ref<ICourse[]>([])
 const beforeAddClsDialog = async () => {
     addDialogVisible.value = true;
+    // 获取班级可选所属课程
     try {
         let {data: res} = await api.courseApi.getCourse({name: null});
         if (res.code === 200) {
@@ -180,14 +189,25 @@ const total = ref(0);
 const getClassList = async (np: number) => {
     page.value = np;
     loading.value = true;
-    // TODO: 分页获取班级列表
+    try {
+        let {data: res} = await api.classApi.getClassList({
+            name: searchKey.value
+        });
+        if (res.code === 200) {
+            total.value = res.data.classList.length;
+            classData.value = res.data.classList.slice((np - 1) * 10, 10);
+        } else {
+            ErrorNotice('获取班级列表失败，请稍后重试！');
+        }
+    } catch (e: any) {
+        ErrorNotice('获取班级列表失败，' + e);
+    } finally {
+        loading.value = false;
+    }
 }
-const getClassDetails = async (index: number, row: IClass) => {
-    console.log(index, row);
-    // TODO: 获取班级详情
-}
+
+// @ts-ignore
 const delClass = async (index: number, row: IClass) => {
-    console.log(index, row);
     try {
         let {data: res} = await api.classApi.delClass({class_id: row.ID});
         if (res.code === 200) {
@@ -202,11 +222,45 @@ const delClass = async (index: number, row: IClass) => {
 }
 
 // 展示班级详情相关
-const detailsDialogVisible = ref(true);
+const detailsDialogVisible = ref(false);
 const className = ref('2022级计算机科学与技术教学1班');
 const classCapacity = ref(55);
 const classCourse = ref('编译原理');
 const classCount = ref(0);
+const classId = ref(0);
+const classCourseId = ref(0);
+const scoreList = ref<Array<number>>([]);
+const stuList = ref<IStudent[]>([]);
+const getClassStuInfo = async (class_id: number) => {
+    scoreList.value = [];
+    stuList.value = [];
+    try {
+        let {data: res} = await api.classApi.getClassInfo({
+            class_id: class_id
+        });
+        if (res.code === 200) {
+            classCount.value = res.data.studentList.length;
+            stuList.value = res.data.studentList;
+            stuList.value.forEach((stu: IStudent) => {
+                scoreList.value.push(stu.FINAL_SCORE);
+            })
+            detailsDialogVisible.value = true;
+        } else {
+            ErrorNotice('获取班级信息失败，请稍后重试！');
+        }
+    } catch (e: any) {
+        ErrorNotice('获取班级信息失败，' + e);
+    }
+}
+// @ts-ignore
+const getClassDetails = async (index: number, row: IClass) => {
+    className.value = row.NAME;
+    classCapacity.value = row.CAPACITY;
+    classCourse.value = row.COURSE_NAME;
+    classId.value = row.ID;
+    classCourseId.value = row.COURSE_ID;
+    await getClassStuInfo(row.ID);
+}
 
 onMounted(async () => {
     await getClassList(1);
@@ -234,7 +288,7 @@ onMounted(async () => {
     flex-direction: row;
 
     .statistic {
-        flex: 1.5;
+        flex: 1;
     }
 
     .stu-table {
